@@ -96,6 +96,11 @@ static void init_wifi() {
     esp_wifi_connect();
 }
 
+static esp_err_t get_handler(httpd_req_t *req) {
+    httpd_resp_send(req, "Hub says hello", HTTPD_RESP_USE_STRLEN);
+    return ESP_OK;
+}
+
 static esp_err_t post_handler(httpd_req_t *req) {
     char buf[100];
     int received = httpd_req_recv(req, buf, sizeof(buf));
@@ -112,12 +117,20 @@ static esp_err_t post_handler(httpd_req_t *req) {
 static void init_http_server() {
     httpd_handle_t server = NULL;
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+    httpd_uri_t uri_get = {
+        .uri = "/",
+        .method = HTTP_GET,
+        .handler = get_handler,
+        .user_ctx = NULL
+    };
     httpd_uri_t uri_post = {
         .uri = "/upload",
         .method = HTTP_POST,
         .handler = post_handler,
-        .user_ctx = NULL};
+        .user_ctx = NULL
+    };
     httpd_start(&server, &config);
+    httpd_register_uri_handler(server, &uri_get);
     httpd_register_uri_handler(server, &uri_post);
 }
 
